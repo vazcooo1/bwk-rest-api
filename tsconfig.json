@@ -11,7 +11,7 @@
       "sourceMap": true,
       "outDir": "dist"
     },
-    "include": ["src/**/*", "auth/authApp.ts"],
+    "include": ["src/**/*", "src/auth/authApp.ts"],
     "exclude": ["node_modules"]
   }
   

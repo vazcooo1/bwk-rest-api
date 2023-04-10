@@ -7,6 +7,7 @@ import {
   ecommerce3PriceUpdate,
   ecommerce3StockUpdate,
   omincommerceUpdate,
+  updateGecom
 } from './controllers';
 
 export const apiRoutes = Router();
@@ -18,3 +19,4 @@ apiRoutes.post('/ecommerce-2-stock-update', ecommerce2StockUpdate);
 apiRoutes.post('/ecommerce-3-price-update', ecommerce3PriceUpdate);
 apiRoutes.post('/ecommerce-3-stock-update', ecommerce3StockUpdate);
 apiRoutes.post('/omincommerce-update', omincommerceUpdate);
+apiRoutes.post('/updateGecom', updateGecom)

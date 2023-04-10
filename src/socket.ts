@@ -11,10 +11,10 @@ export function initSocket(server: Server) {
   });
 
   io.on('connection', (socket: Socket) => {
-    emitProgressUpdate('Client connected via WebSocket');
+    emitProgressUpdate('App conectada correctamente con la REST API - Buswork');
     console.log('Client connected via WebSocket');
     socket.on('disconnect', () => {
-      emitProgressUpdate('Client disconnected from WebSocket');
+      emitProgressUpdate('App desconectada correctamente con la REST API - Buswork');
       console.log('Client disconnected from WebSocket');
     });
   });
