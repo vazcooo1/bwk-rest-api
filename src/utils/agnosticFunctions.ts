@@ -1,5 +1,10 @@
-import { Product } from "../product";
+import { Product, IProduct } from "../product";
 import { emitProgressUpdate } from '../socket';
+import { sheets } from "../auth/authGoogle";
+
+type Item = Partial<IProduct>;
+
+type MapFn<T> = (row: any[]) => T;
 
 interface ItemData {
   sku: string;
@@ -103,3 +108,106 @@ export async function findAndUpdateMongoML(data: ItemDataML[]): Promise<void> {
   );
 }
 
+
+export async function compareArraysToMongo(callData: Item[]): Promise<Item[]> {
+  // Retrieve all products from the database using the `Product` model
+  const baseData: IProduct[] = await Product.find();
+
+  // Create a hash map to store the base data
+  const baseDataMap = new Map(baseData.map((item: IProduct) => [item.sku, item]));
+
+  // Use the map function to process each item in the `callData` array
+  const processedArray: Item[] = callData.map((item1: Item, index: number) => {
+    if (index % 1000 === 0) {
+      emitProgressUpdate(
+        `Procesados ${index + 1}/${callData.length} productos (${(
+          ((index + 1) / callData.length) *
+          100
+        ).toFixed(2)}%)`
+      );
+    }
+
+    // Find the matching product in the hash map using the `sku` property
+    const matchingItem: IProduct | undefined = baseDataMap.get(item1.sku!);
+    let result: Item = {};
+
+    if (matchingItem) {
+      // Compare all properties of the `matchingItem` and `item1` objects
+      // and add any mismatched properties to the result object
+      for (const [key, value] of Object.entries(item1)) {
+        if (matchingItem[key as keyof IProduct] !== value) {
+          // If there is a mismatched property, add the entire item1 object to the result
+          result = item1;
+          break; // Stop processing the rest of the object
+        }
+      }
+    }
+
+    // Return the result object
+    return result;
+  });
+
+  // Return the processed array containing all the mismatched data
+  return processedArray;
+}
+
+
+
+
+export async function compareArraysToMongoML(callData: Item[]): Promise<Item[]> {
+  // Retrieve all products from the database using the `Product` model
+  const baseData: IProduct[] = await Product.find();
+
+  // Create a hash map to store the base data
+  const baseDataMap = new Map(baseData.map((item: IProduct) => [item.sku_ML, item]));
+
+  // Use the map function to process each item in the `callData` array
+  const processedArray: Item[] = callData.map((item1: Item, index: number) => {
+    if (index % 1000 === 0) {
+      emitProgressUpdate(
+        `Procesados ${index + 1}/${callData.length} productos (${(
+          ((index + 1) / callData.length) *
+          100
+        ).toFixed(2)}%)`
+      );
+    }
+
+    // Find the matching product in the hash map using the `sku` property
+    const matchingItem: IProduct | undefined = baseDataMap.get(item1.sku_ML!);
+    let result: Item = {};
+
+    if (matchingItem) {
+      // Compare all properties of the `matchingItem` and `item1` objects
+      // and add any mismatched properties to the result object
+      for (const [key, value] of Object.entries(item1)) {
+        if (matchingItem[key as keyof IProduct] !== value) {
+          // If there is a mismatched property, add the entire item1 object to the result
+          result = item1;
+          break; // Stop processing the rest of the object
+        }
+      }
+    }
+
+    // Return the result object
+    return result;
+  });
+
+  // Return the processed array containing all the mismatched data
+  return processedArray;
+}
+
+export async function getDataFromSheet<T>(
+  spreadsheetId: string,
+  range: string,
+  mapFn: MapFn<T>
+): Promise<T[]> {
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range,
+    // Specify the valueRenderOption parameter to get unformatted values
+    valueRenderOption: 'UNFORMATTED_VALUE',
+  });
+  const rows = res.data.values;
+  const filter = rows?.filter(e => e !== undefined && e !== null) as any
+  return filter.map(mapFn);
+}
