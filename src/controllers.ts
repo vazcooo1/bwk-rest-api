@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { emitProgressUpdate } from './socket';
 import { gecomUpdate } from './batch/gecom-data';
+import { upToDateToMongo } from './batch/update-mongo';
 
 export async function ecommerce1PriceUpdate(req: Request, res: Response) {
   emitProgressUpdate('Procesando precios Lista 21: Buswork');
@@ -47,4 +48,9 @@ export async function omincommerceUpdate(req: Request, res: Response) {
 export async function updateGecom(req: Request, res: Response) {
   await gecomUpdate();
   res.status(200).json({ message: 'Sincronizando Gecom y Google DB' });
+}
+
+export async function updateMongoDB(req: Request, res: Response) {
+  await upToDateToMongo();
+  res.status(200).json({ message: 'Sincronizando MongoDB'})
 }
