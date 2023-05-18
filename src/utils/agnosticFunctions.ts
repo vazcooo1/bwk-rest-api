@@ -1,6 +1,7 @@
 import { Product, IProduct } from "../product";
-import { emitProgressUpdate } from '../socket';
+import { emitDebouncedProgressUpdate, emitProgressUpdate } from '../socket';
 import { sheets } from "../auth/authGoogle";
+import { trackProgress } from "../progressTracker";
 
 type Item = Partial<IProduct>;
 
@@ -55,8 +56,10 @@ export function updatePriceAndStock(price: number) {
 }
 
 export async function findAndUpdateMongo(data: ItemData[]): Promise<void> {
+  const totalItems = data.length;
+
   await Promise.all(
-    data.map(async (item) => {
+    data.map(async (item, index) => {
       const updateData = {
         sku: item.sku,
         regular_price_BWK: item.regular_price_BWK,
@@ -73,6 +76,8 @@ export async function findAndUpdateMongo(data: ItemData[]): Promise<void> {
           upsert: true,
         }
       );
+
+      trackProgress({ currentStep: index + 1, totalSteps: totalItems, baseMessage: 'Actualizando productos en MongoDB...' });
 
       if (product) {
         emitProgressUpdate(`Producto: ${product.sku} correctamente actualizado.`)
@@ -110,6 +115,8 @@ export async function findAndUpdateMongoML(data: ItemDataML[]): Promise<void> {
 
 
 export async function compareArraysToMongo(callData: Item[]): Promise<Item[]> {
+  emitDebouncedProgressUpdate(`Productos a procesar: ${callData.length}`)
+  const totalItems = callData.length;
   // Retrieve all products from the database using the `Product` model
   const baseData: IProduct[] = await Product.find();
 
@@ -118,14 +125,7 @@ export async function compareArraysToMongo(callData: Item[]): Promise<Item[]> {
 
   // Use the map function to process each item in the `callData` array
   const processedArray: Item[] = callData.map((item1: Item, index: number) => {
-    if (index % 1000 === 0) {
-      emitProgressUpdate(
-        `Procesados ${index + 1}/${callData.length} productos (${(
-          ((index + 1) / callData.length) *
-          100
-        ).toFixed(2)}%)`
-      );
-    }
+    trackProgress({ currentStep: index + 1, totalSteps: totalItems, baseMessage: 'Actualizando productos en MongoDB...' });
 
     // Find the matching product in the hash map using the `sku` property
     const matchingItem: IProduct | undefined = baseDataMap.get(item1.sku!);
@@ -155,6 +155,8 @@ export async function compareArraysToMongo(callData: Item[]): Promise<Item[]> {
 
 
 export async function compareArraysToMongoML(callData: Item[]): Promise<Item[]> {
+  emitDebouncedProgressUpdate(`Productos a procesar: ${callData.length}`)
+  const totalItems = callData.length;
   // Retrieve all products from the database using the `Product` model
   const baseData: IProduct[] = await Product.find();
 
@@ -163,14 +165,7 @@ export async function compareArraysToMongoML(callData: Item[]): Promise<Item[]> 
 
   // Use the map function to process each item in the `callData` array
   const processedArray: Item[] = callData.map((item1: Item, index: number) => {
-    if (index % 1000 === 0) {
-      emitProgressUpdate(
-        `Procesados ${index + 1}/${callData.length} productos (${(
-          ((index + 1) / callData.length) *
-          100
-        ).toFixed(2)}%)`
-      );
-    }
+    trackProgress({ currentStep: index + 1, totalSteps: totalItems, baseMessage: 'Actualizando productos en MongoDB...' });
 
     // Find the matching product in the hash map using the `sku` property
     const matchingItem: IProduct | undefined = baseDataMap.get(item1.sku_ML!);

@@ -7,6 +7,7 @@ import {
 } from "../utils/agnosticFunctions";
 import { bwkLista21, atoLista1000, stockTotal, MeLiData } from "../config";
 import { IProduct } from "../product";
+import { emitDebouncedProgressUpdate, emitProgressUpdate } from "../socket";
 
 interface IPartialProductWithSKU extends Partial<IProduct> {
     sku: string,
@@ -137,13 +138,6 @@ export async function upToDateToMongo(): Promise<void> {
 
   // Use the Array.map() method to create the finalDataForMongo array
   const finalDataForMongo = bwkPArr.map((datapoint) => {
-    counter++;
-    const percentage = Math.round((counter / bwkPArr.length) * 100);
-
-    // Log a message indicating the current progress
-    console.log(
-      `Procesando el producto: ${counter} de ${bwkPArr.length} (${percentage}%)`
-    );
 
     const sku = datapoint.sku;
     const regularPriceBWK = datapoint.regular_price_BWK;
@@ -170,7 +164,7 @@ export async function upToDateToMongo(): Promise<void> {
   if (filtered.length > 0) {
     findAndUpdateMongo(filtered);
   } else {
-    console.log(`${final.length} productos ya estaban actualizados`);
+    emitDebouncedProgressUpdate(`${final.length} productos ya estaban actualizados - Buswork + Atopems`);
   }
 
   const meliPriceAndStock: MeliPriceAndStockData[] = await getDataFromSheet(
@@ -207,6 +201,6 @@ export async function upToDateToMongo(): Promise<void> {
   if (meliFilter.length > 0) {
     findAndUpdateMongoML(meliFilter);
   } else {
-    return console.log(`${meliFilter.length} productos ya actualizados`);
+    emitDebouncedProgressUpdate(`${meliPriceAndStock.length} productos ya actualizados - MercadoLibre`);
   }
 }

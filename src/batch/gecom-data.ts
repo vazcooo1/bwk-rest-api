@@ -4,7 +4,7 @@ import { priceFormatAppendATO } from "../google/Price-format-append";
 import { priceFormatAppendBWK } from "../google/Price-format-appendBW";
 import { sheets } from "../auth/authGoogle";
 import { updatePriceAndStock, updateSKU } from '../utils/agnosticFunctions'
-import { emitProgressUpdate } from "../socket";
+import { emitDebouncedProgressUpdate, emitProgressUpdate } from "../socket";
 
 export const toFormatPricesBWK: Array<[string, number]> = [];
 export const toInsertStockBWK: Array<[string, number]> = [];
@@ -30,7 +30,7 @@ export async function gecomUpdate() {
       range: "raw!A2:B",
     },
     async (err: any, res: any) => {
-      if (err) return emitProgressUpdate(`La API de Google tuvo un error: ${err}`);
+      if (err) return emitDebouncedProgressUpdate(`La API de Google tuvo un error: ${err}`);
       const rows = res.data.values;
       if (rows.length) {
         const firstData: FirstData[] = rows.map((e: any[]) => {
@@ -50,7 +50,7 @@ export async function gecomUpdate() {
             toFormatPricesBWK.push([e.sku, e.price]);
         });
         await priceFormatAppendBWK()
-        emitProgressUpdate(`Lista 21 actualizada: ${toUpdate.length} SKUs procesados`)
+        emitDebouncedProgressUpdate(`Lista 21 actualizada: ${toUpdate.length} SKUs procesados`)
       }
     }
   );  
@@ -60,7 +60,7 @@ export async function gecomUpdate() {
       range: "RAWBSAS!A2:B",
     },
     async (err: any, res: any) => {
-      if (err) return emitProgressUpdate(`La API de Google tuvo un error: ${err}`);
+      if (err) return emitDebouncedProgressUpdate(`La API de Google tuvo un error: ${err}`);
       const rows = res.data.values;
       if (rows.length) {
         let firstData: FirstData[] = rows.map((e: any[]) => {
@@ -80,7 +80,7 @@ export async function gecomUpdate() {
             toInsertStockBWK.push([e.sku, e.stock_quantity])
         })
         await formatedStockAppendBWK()
-        emitProgressUpdate(`Stock Depósito Buenos Aires actualizado: ${toUpdate.length} SKUs procesados`)
+        emitDebouncedProgressUpdate(`Stock Depósito Buenos Aires actualizado: ${toUpdate.length} SKUs procesados`)
       }
     }
   );
@@ -90,7 +90,7 @@ export async function gecomUpdate() {
       range: "raw!A2:B",
     },
     async (err: any, res: any) => {
-      if (err) return emitProgressUpdate(`La API de Google tuvo un error: ${err}`);
+      if (err) return emitDebouncedProgressUpdate(`La API de Google tuvo un error: ${err}`);
       const rows = res.data.values;
       if (rows.length) {
         let firstData: FirstData[] = rows.map((e: any[]) => {
@@ -110,7 +110,7 @@ export async function gecomUpdate() {
             toFormatPricesATO.push([e.sku, e.price]);
         });
         await priceFormatAppendATO()
-        emitProgressUpdate(`Lista 1000 actualizada: ${toUpdate.length} SKUs procesados`)
+        emitDebouncedProgressUpdate(`Lista 1000 actualizada: ${toUpdate.length} SKUs procesados`)
       }
     }
   );  
@@ -120,7 +120,7 @@ export async function gecomUpdate() {
       range: "RAWMDQ!A2:B",
     },
     async (err: any, res: any) => {
-      if (err) return emitProgressUpdate(`La API de Google tuvo un error: ${err}`);
+      if (err) return emitDebouncedProgressUpdate(`La API de Google tuvo un error: ${err}`);
       const rows = res.data.values;
       if (rows.length) {
         let firstData: FirstData[] = rows.map((e: any) => {
@@ -140,7 +140,7 @@ export async function gecomUpdate() {
             toInsertStockATO.push([e.sku, e.stock_quantity])
         })
         await formatedStockAppendATO()
-        emitProgressUpdate(`Stock Depósito MDQ actualizado: ${toUpdate.length} SKUs procesados`)
+        emitDebouncedProgressUpdate(`Stock Depósito MDQ actualizado: ${toUpdate.length} SKUs procesados`)
       }
     }
   );
